@@ -6,7 +6,7 @@
 /*   By: artprevo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/30 19:13:34 by artprevo          #+#    #+#             */
-/*   Updated: 2018/11/30 19:41:04 by artprevo         ###   ########.fr       */
+/*   Updated: 2018/12/02 21:37:51 by artprevo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,27 +47,25 @@ static	int		ft_strccpy(char **line, char *str)
 	return (i);
 }
 
-static	int		ft_read(int fd, char *buf, char **line, t_list *list)
+static	int		ft_read(int fd, t_list *list)
 {
 	int		r;
-	char	*tmp;
+	char	buf[BUFF_SIZE];
 
-	list->content = ft_strdup("");
-	while ((r = read(fd, buf, BUFF_SIZE)))
+	while ((r = read(fd, buf, BUFF_SIZE)) > 0)
 	{
 		buf[r] = '\0';
-		if (!(tmp = ft_strjoin(list->content, buf)))
+		if (!(list->content = ft_strjoin(list->content, buf)))
 			return (-1);
-		free(list->content);
-		list->content = tmp;
 		if (ft_strchr(buf, '\n'))
-				break ;
+			break ;
 	}
+	if (r < 0)
+		return (-1);
 	if (r < BUFF_SIZE && !ft_strlen(list->content))
 		return (0);
 	return (1);
 }
-
 
 int				get_next_line(const int fd, char **line)
 {
@@ -75,16 +73,13 @@ int				get_next_line(const int fd, char **line)
 	t_list			*list;
 	int				r;
 	int				i;
-	char			*buf;
 
-	if (!line)
+	if (fd < 0 || line == NULL)
 		return (-1);
 	list = ft_file(&file, fd);
-	if (!(buf = (char *)malloc(sizeof(char) * (BUFF_SIZE + 1))))
-		return (-1);
-	buf[0] = 0;
-	*line = ft_strnew(1);
-	r = ft_read(fd, buf, line, list);
+	r = ft_read(fd, list);
+	if (r == -1 || r == 0)
+		return (r);
 	i = ft_strccpy(line, list->content);
 	if (i < (int)ft_strlen(list->content))
 		list->content += (i + 1);
