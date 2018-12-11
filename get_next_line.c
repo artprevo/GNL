@@ -6,7 +6,7 @@
 /*   By: artprevo <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/11/30 19:13:34 by artprevo          #+#    #+#             */
-/*   Updated: 2018/12/11 15:43:08 by artprevo         ###   ########.fr       */
+/*   Updated: 2018/12/11 16:29:50 by artprevo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,13 +48,14 @@ static char		*ft_strnjoin(char *s1, char *s2, int r)
 	return (join);
 }
 
-static char		*ft_free(char *content, int r)
+static char		*ft_free(char *content, int r, char *buf)
 {
 	char	*tmp;
 
 	tmp = content;
 	content = ft_strdup(content + r);
 	free(tmp);
+	free(buf);
 	return (content);
 }
 
@@ -82,10 +83,10 @@ int				get_next_line(const int fd, char **line)
 	static t_list	*file;
 	t_list			*list;
 	int				r;
-	int				i;
-	char			buf[BUFF_SIZE + 1];
+	char			*buf;
 
-	if (fd < 0 || line == NULL || read(fd, buf, 0) < 0 || BUFF_SIZE < 0)
+	if ((!(buf = (char *)malloc(sizeof(char) * (BUFF_SIZE + 1)))) \
+			|| read(fd, buf, 0) < 0 || fd < 0 || line == NULL || BUFF_SIZE < 0)
 		return (-1);
 	list = ft_file(&file, fd);
 	while ((r = read(fd, buf, BUFF_SIZE)) > 0)
@@ -98,9 +99,9 @@ int				get_next_line(const int fd, char **line)
 	}
 	if (r < BUFF_SIZE && !ft_strlen(list->content))
 		return (0);
-	i = ft_fill(line, list->content);
-	if (i < (int)ft_strlen(list->content))
-		list->content = ft_free(list->content, i + 1);
+	r = ft_fill(line, list->content);
+	if (r < (int)ft_strlen(list->content))
+		list->content = ft_free(list->content, r + 1, buf);
 	else
 		ft_strclr(list->content);
 	return (1);
